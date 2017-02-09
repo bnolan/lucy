@@ -2,4 +2,10 @@ language: cpp
 compiler: clang
 script: make && ./server
 
-
+before_script:
+    - curl -O https://www.lua.org/ftp/lua-5.3.4.tar.gz
+    - tar xvfz lua*
+    - mv lua* lua
+    - cd lua
+    - make linux
+    - cd ..
