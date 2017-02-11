@@ -11,6 +11,8 @@ std::string generateUUID () {
   return sole::uuid1().str();
 }
 
+Node::ptr world(new Node("world"));
+
 void startServer () {
     WsServer server;
 
@@ -74,16 +76,23 @@ void startServer () {
         server.start();
     });
 
-    this_thread::sleep_for(chrono::seconds(1000));
-    
+    while (true) {
+        for (auto a_connection: server.get_connections()) {
+            auto send_stream=make_shared<WsServer::SendStream>();
+            *send_stream << world->toString();
+
+            //server.send is an asynchronous function
+            server.send(a_connection, send_stream);
+        }
+
+        this_thread::sleep_for(chrono::seconds(1));
+    }
+
     server_thread.join();
 
 }
 
 int main () {
-  startServer();
-
-  Node::ptr world(new Node("world"));
   world->setAttribute("uuid", generateUUID());
 
   Node::ptr a(new Node("box"));
@@ -101,5 +110,8 @@ int main () {
   c->setAttribute("position", "6 2 3");
   world->appendChild(c);
 
-  std::cout << "Scene state:\n\n" << world->toString() << "\n\n";
+  // std::cout << "Scene state:\n\n" << world->toString() << "\n\n";
+
+  startServer();
 }
+
