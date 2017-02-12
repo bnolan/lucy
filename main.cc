@@ -1,5 +1,6 @@
 #include <memory>
 #include "node.h"
+#include "script.h"
 #include "vendor/sole.hpp"
 #include "vendor/server_ws.hpp"
 
@@ -8,10 +9,10 @@ using namespace std;
 typedef SimpleWeb::SocketServer<SimpleWeb::WS> WsServer;
 
 std::string generateUUID () {
-  return sole::uuid1().str();
+  return sole::uuid4().str();
 }
 
-Node::ptr world(new Node("world"));
+Node::ptr world(new Node("a-entity"));
 
 void startServer () {
     WsServer server;
@@ -24,7 +25,7 @@ void startServer () {
     //    var ws=new WebSocket("ws://localhost:8080/echo");
     //    ws.onmessage=function(evt){console.log(evt.data);};
     //    ws.send("test");
-    auto& echo=server.endpoint["^/echo/?$"];
+    auto& echo=server.endpoint["^/lucy/?$"];
     
     echo.on_message=[&server](shared_ptr<WsServer::Connection> connection, shared_ptr<WsServer::Message> message) {
         //WsServer::Message::string() is a convenience function for:
@@ -85,7 +86,9 @@ void startServer () {
             server.send(a_connection, send_stream);
         }
 
-        this_thread::sleep_for(chrono::seconds(1));
+        tickScript();
+
+        this_thread::sleep_for(chrono::milliseconds(200));
     }
 
     server_thread.join();
@@ -95,23 +98,24 @@ void startServer () {
 int main () {
   world->setAttribute("uuid", generateUUID());
 
-  Node::ptr a(new Node("box"));
+  Node::ptr a(new Node("a-box"));
   a->setAttribute("uuid", generateUUID());
-  a->setAttribute("position", "1 2 3");
+  a->setAttribute("position", "1 2 -10");
   world->appendChild(a);
 
-  Node::ptr b(new Node("box"));
+  Node::ptr b(new Node("a-box"));
   b->setAttribute("uuid", generateUUID());
-  b->setAttribute("position", "3 2 3");
+  b->setAttribute("position", "3 2 -10");
   world->appendChild(b);
 
-  Node::ptr c(new Node("box"));
+  Node::ptr c(new Node("a-box"));
   c->setAttribute("uuid", generateUUID());
-  c->setAttribute("position", "6 2 3");
+  c->setAttribute("position", "6 2 -10");
   world->appendChild(c);
 
   // std::cout << "Scene state:\n\n" << world->toString() << "\n\n";
 
+  startScript(world.get());
   startServer();
 }
 
