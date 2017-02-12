@@ -15,8 +15,16 @@ all: $(OBJ)
 %.o: %.c
 	$(CXX) $@ -c $<
 
+bootstrap:
+	curl -O https://www.lua.org/ftp/lua-5.3.4.tar.gz
+	tar xvfz lua-5.3.4.tar.gz
+	mv lua-5.3.4 lua
+	cd lua && make linux
+
 clean:
 	rm -f *.o
 	rm $(BIN)
+	rm -rf lua
+	rm -f lua-5.3.4.tar.gz
 
 
