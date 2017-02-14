@@ -55,7 +55,7 @@ std::string Node::toString () {
       ss << " " << pair.first << "=\"" << pair.second << "\"";
   }
 
-  if (hasChildNodes()) {
+  // if (hasChildNodes()) {
     ss << ">";
 
     for (auto const n : childNodes) {
@@ -63,9 +63,9 @@ std::string Node::toString () {
     }
 
     ss << "</" << nodeName << ">";
-  } else {
-    ss << " />";
-  }
+  // } else {
+  //   ss << " />";
+  // }
 
   return ss.str();
 }

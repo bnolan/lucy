@@ -34,20 +34,22 @@ void startServer () {
         //auto message_str = data_ss.str();
         auto message_str=message->string();
         
+        startScript(world, message_str);
+
         cout << "Server: Message received: \"" << message_str << "\" from " << (size_t)connection.get() << endl;
                 
-        cout << "Server: Sending message \"" << message_str <<  "\" to " << (size_t)connection.get() << endl;
+        // cout << "Server: Sending message \"" << message_str <<  "\" to " << (size_t)connection.get() << endl;
         
-        auto send_stream=make_shared<WsServer::SendStream>();
-        *send_stream << message_str;
-        //server.send is an asynchronous function
-        server.send(connection, send_stream, [](const boost::system::error_code& ec){
-            if(ec) {
-                cout << "Server: Error sending message. " <<
-                //See http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference.html, Error Codes for error code meanings
-                        "Error: " << ec << ", error message: " << ec.message() << endl;
-            }
-        });
+        // auto send_stream=make_shared<WsServer::SendStream>();
+        // *send_stream << message_str;
+        // //server.send is an asynchronous function
+        // server.send(connection, send_stream, [](const boost::system::error_code& ec){
+        //     if(ec) {
+        //         cout << "Server: Error sending message. " <<
+        //         //See http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference.html, Error Codes for error code meanings
+        //                 "Error: " << ec << ", error message: " << ec.message() << endl;
+        //     }
+        // });
     };
     
     echo.on_open=[&server](shared_ptr<WsServer::Connection> connection) {
@@ -115,7 +117,7 @@ int main () {
 
   // std::cout << "Scene state:\n\n" << world->toString() << "\n\n";
 
-  startScript(world.get());
+  startScript(world, "");
   startServer();
 }
 

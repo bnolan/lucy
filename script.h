@@ -3,7 +3,7 @@
 #include "node.h"
 
 int tickScript();
-int startScript(Node *box);
+int startScript(Node::ptr, std::string);
 
 // class Script: public Node {
 
