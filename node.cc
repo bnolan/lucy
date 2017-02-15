@@ -22,10 +22,24 @@ void Node::removeAttribute(std::string name) {
 
 void Node::appendChild(ptr child) {
   childNodes.push_back(child);
+  child->parentNode = this; // std::make_shared<Node>(this);
 }
 
 void Node::removeChild(ptr child) {
-  throw "todo";
+  childNodes.remove(child);
+  child->parentNode = NULL;
+}
+
+void Node::insertBefore(ptr newChild, ptr refChild) {
+  // fixme: not as per dom-level-1, will need to fix if we 
+  // need to respect child order
+  appendChild(newChild);
+}
+
+Node::ptr Node::replaceChild(ptr newChild, ptr oldChild) {
+  insertBefore(newChild, oldChild);
+  childNodes.remove(oldChild);
+  return oldChild;
 }
 
 bool Node::hasChildNodes () {
@@ -72,6 +86,7 @@ std::string Node::toString () {
 
 Node::Node (std::string name) {
   nodeName = name;
+  nodeValue = 1;
 }
 
 Node::~Node () {
