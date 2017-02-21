@@ -24,8 +24,10 @@ function tick (delta)
     y = math.cos(i * 3 / 2) * 2 + 2
     z = math.cos(i / 5) * 0.5
 
-    node:setAttribute("position", string.format("%.2f %.2f %.2f", x, y, z))
-    node:setAttribute("color", colors[index])
+    if node:nodeName() == 'a-box' then
+      node:setAttribute("position", string.format("%.2f %.2f %.2f", x, y, z))
+      node:setAttribute("color", colors[index])
+    end
   end
 
 end

@@ -2,7 +2,7 @@ CXX=clang++
 CXXFLAGS=-g -std=c++11 -Wall -pedantic -I./lua/src -I/usr/local/opt/openssl/include
 BIN=server
 
-SRC=$(wildcard *.cc)
+SRC=$(wildcard *.cc) $(wildcard vendor/*.cc)
 OBJ=$(SRC:%.cc=%.o)
 
 all: $(OBJ)

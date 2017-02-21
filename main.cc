@@ -1,8 +1,10 @@
 #include <memory>
+#include <iostream>
 #include "node.h"
 #include "script.h"
 #include "vendor/sole.hpp"
 #include "vendor/server_ws.hpp"
+#include "vendor/pugixml.hpp"
 
 using namespace std;
 
@@ -88,36 +90,89 @@ void startServer () {
             server.send(a_connection, send_stream);
         }
 
-        tickScript();
+        std::list<Node::ptr> scripts = world->querySelectorAll("script");
 
-        this_thread::sleep_for(chrono::milliseconds(200));
+        std::cout << "Found #" << scripts.size() << " script tags\n";
+
+        for (auto node: scripts) {
+          auto script = (Script *)node.get();
+          script->tick(); 
+        }
+
+        this_thread::sleep_for(chrono::milliseconds(50));
     }
 
     server_thread.join();
 
 }
 
+void addChildren (Node::ptr parent, pugi::xml_node node) {
+  for (pugi::xml_node child = node.first_child(); child; child = child.next_sibling()) {
+
+    if (child.type() == 2) {
+      if (std::string("script") == child.name()) {
+        Node::ptr script(new Script());
+
+        // Set content from cdata
+        script->innerText = child.first_child().value();
+
+        parent->appendChild(script);
+
+        std::cout << "Beep boop \n";
+      } else {
+        // Everything else...
+
+        Node::ptr element(new Node(child.name()));
+
+        for (pugi::xml_attribute attr = child.first_attribute(); attr; attr = attr.next_attribute()) {
+          element->setAttribute(attr.name(), attr.value());
+        }
+
+        addChildren(element, child);
+
+        parent->appendChild(element);
+      }
+    }
+  }
+}
+
+void loadScene () {
+    pugi::xml_document doc;
+
+    pugi::xml_parse_result result = doc.load_file("scene.xml");
+
+    std::cout << "Load result: " << result.description() << ".\n";
+
+    // " mesh name: " << doc.child("mesh").attribute("name").value() << std::endl;
+
+    pugi::xml_node sceneNode = doc.child("a-scene");
+
+    addChildren(world, sceneNode);
+}
+
 int main () {
-  world->setAttribute("uuid", generateUUID());
+  loadScene();
 
-  Node::ptr a(new Node("a-box"));
-  a->setAttribute("uuid", generateUUID());
-  a->setAttribute("position", "1 2 -10");
-  world->appendChild(a);
+  // world->setAttribute("uuid", generateUUID());
 
-  Node::ptr b(new Node("a-box"));
-  b->setAttribute("uuid", generateUUID());
-  b->setAttribute("position", "3 2 -10");
-  world->appendChild(b);
+  // Node::ptr a(new Node("a-box"));
+  // a->setAttribute("uuid", generateUUID());
+  // a->setAttribute("position", "1 2 -10");
+  // world->appendChild(a);
 
-  Node::ptr c(new Node("a-box"));
-  c->setAttribute("uuid", generateUUID());
-  c->setAttribute("position", "6 2 -10");
-  world->appendChild(c);
+  // Node::ptr b(new Node("a-box"));
+  // b->setAttribute("uuid", generateUUID());
+  // b->setAttribute("position", "3 2 -10");
+  // world->appendChild(b);
 
-  // std::cout << "Scene state:\n\n" << world->toString() << "\n\n";
+  // Node::ptr c(new Node("a-box"));
+  // c->setAttribute("uuid", generateUUID());
+  // c->setAttribute("position", "6 2 -10");
+  // world->appendChild(c);
 
-  startScript(world, "");
+  std::cout << "Scene state:\n\n" << world->toString() << "\n\n";
+
+  startScript(world->firstChild(), "");
   startServer();
 }
 

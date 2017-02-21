@@ -17,17 +17,18 @@ typedef std::weak_ptr<Node> NodeWeakPtr;
 
 #define METATABLE "NodeMetaTable"
 
+Script::Script () : Node("script") {
+}
+
 void registerNode (lua_State *lua, Node::ptr node);
 
-int tickScript () {
-    lua_getglobal(L, "tick");  /* function to be called */
-    lua_pushnumber(L, 200); // milliseconds
+void Script::tick () {
+  lua_getglobal(L, "tick");  /* function to be called */
+  lua_pushnumber(L, 200); // milliseconds
 
-    if (lua_pcall(L, 1, 1, 0) != 0) {
-        std::cout << "error running function `tick': " << lua_tostring(L, -1) << "\n";
-    }
-
-    return 0;
+  if (lua_pcall(L, 1, 1, 0) != 0) {
+    std::cout << "error running function `tick': " << lua_tostring(L, -1) << "\n";
+  }
 }
 
 #define getWeakPtr auto weakPtr = *static_cast<NodeWeakPtr*>(luaL_checkudata(L, 1, METATABLE))
@@ -190,7 +191,7 @@ int startScript (Node::ptr box, std::string source) {
 
     lua_pop(L, 1);  /* Take the returned value out of the stack */
 
-    tickScript();
+    // tickScript();
 
     return 0;
 }

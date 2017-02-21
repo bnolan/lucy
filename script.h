@@ -1,16 +1,18 @@
 #pragma once
 
 #include "node.h"
+extern "C" {
+  #include <lua.h>
+}
 
-int tickScript();
 int startScript(Node::ptr, std::string);
 
-// class Script: public Node {
+class Script: public Node {
 
-// public:
-//   lua_State *L;
+public:
+  lua_State *L;
 
-//   Script (std::string name);
+  Script ();
 
-//   ~Script ();
-// };
+  void tick ();
+};

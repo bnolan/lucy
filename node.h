@@ -14,6 +14,7 @@ public:
   typedef std::shared_ptr<Node> ptr;
   typedef Node* weakptr;
   std::string nodeName;
+  std::string innerText;
   int nodeValue; 
   std::list<ptr> childNodes;
   std::map<std::string, std::string> attributes;
@@ -37,11 +38,15 @@ public:
   ptr replaceChild(ptr newChild, ptr oldChild);
   void insertBefore(ptr newChild, ptr refChild);
 
+  std::list<ptr> querySelectorAll(std::string selector);
 
   bool hasChildNodes ();
 
   ptr cloneNode (bool deep);
 
   std::string toString ();
+
+  // Fixme - get rid of this
+  ptr self();
 
 };

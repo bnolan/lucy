@@ -1,5 +1,34 @@
 #include "node.h"
 
+bool nodeMatchesSelector(Node::ptr node, std::string selector) {
+  // fixme - make work properly or raise on invalid selector
+  return node->nodeName == selector;
+}
+
+void internalQuerySelectorAll(Node::ptr node, std::string selector, std::list<Node::ptr> *results) {
+  for (auto const n : node->childNodes) {
+    if (nodeMatchesSelector(n, selector)) {
+      // std::cout << "found " << n->nodeName << "\n";
+      results->push_back(n);
+    }
+
+    internalQuerySelectorAll(n, selector, results);
+  }
+}
+
+// fixme - only gets child nodes
+std::list<Node::ptr> Node::querySelectorAll(std::string selector) {
+  std::list<Node::ptr> results;
+
+  internalQuerySelectorAll(self(), selector, &results);
+
+  return results;
+}
+
+Node::ptr Node::self() {
+  return std::make_shared<Node>(*this);
+}
+
 Node::ptr Node::firstChild() {
   return childNodes.front();
 }
@@ -90,5 +119,5 @@ Node::Node (std::string name) {
 }
 
 Node::~Node () {
-  std::cout << "<" << nodeName << "/> destroyed\n";
+  // std::cout << "<" << nodeName << "/> destroyed\n";
 }
