@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 
 <a-scene>
+  <a-sky texture="sky.png"></a-sky>
+  <a-plane rotation="-90 0 0" scale="512 512 1" position="0.5 0 0.5" texture="hex.png" repeat='128 128'></a-plane>
+
   <a-entity position="0 0 -10">
     <script><![CDATA[
       print "starting up..."
@@ -44,6 +47,57 @@
       -- tick()
     ]]></script>
     <a-box position="1 2 0"></a-box>
+    <a-box position="3 2 0"></a-box>
+    <a-box position="6 2 0"></a-box>
+  </a-entity>
+
+  <a-entity position="0 0 -5">
+    <script><![CDATA[
+      local parent = Element:parentNode()
+      local t = 0
+      local children = parent:childNodes()
+      local colors = { '#f0a', '#0af', '#0fa' }
+
+      function tick (delta)
+        t = t + (delta / 1000)
+
+        -- Cycle at 0.5hz
+        local i = t * 3.14 * 0.5
+        local offset = 1
+
+        for index, node in ipairs(children) do 
+          i = i + 0.4
+
+          local x = math.sin(i) * 4
+          local y = math.cos(i * 3 / 2) * 2 + 2
+          local z = math.cos(i / 5) * 0.5
+
+          if node:nodeName() == 'a-box' then
+            node:setAttribute("position", string.format("%.2f %.2f %.2f", x, y, z))
+            node:setAttribute("color", colors[offset])
+
+            offset = offset + 1
+          end
+        end
+      end
+    ]]></script>
+    <a-box position="1 2 0"></a-box>
+    <a-box position="3 2 0"></a-box>
+    <a-box position="6 2 0"></a-box>
+  </a-entity>
+
+  <a-entity position="0 0 -15">
+    <a-box position="0 2 0" color="#f0a"></a-box>
+    <script><![CDATA[
+      local box = Element:parentNode():firstChild()
+      local t = 0
+
+      function tick (delta)
+        t = t + (delta / 1000)
+        local y = t * 360 * 0.1
+        box:setAttribute("rotation", string.format("0 %.2f 0", y))
+      end
+    ]]></script>
     <a-box position="3 2 0"></a-box>
     <a-box position="6 2 0"></a-box>
   </a-entity>

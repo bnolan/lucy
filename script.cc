@@ -112,6 +112,30 @@ int parentNode (lua_State *lua) {
     return 1;
 }
 
+int firstChild (lua_State *lua) {
+    getWeakPtr;
+
+    if (auto node = weakPtr.lock()) {
+      registerNode(lua, node->firstChild());
+    } else {
+      // todo
+    }
+
+    return 1;
+}
+
+int lastChild (lua_State *lua) {
+    getWeakPtr;
+
+    if (auto node = weakPtr.lock()) {
+      registerNode(lua, node->lastChild());
+    } else {
+      // todo
+    }
+
+    return 1;
+}
+
 int childNodes (lua_State *lua) {
     getWeakPtr;
 
@@ -180,6 +204,12 @@ void registerNode (lua_State *lua, Node::ptr node) {
 
     lua_pushcfunction(lua, parentNode); 
     lua_setfield(lua, -2, "parentNode");
+
+    lua_pushcfunction(lua, firstChild); 
+    lua_setfield(lua, -2, "firstChild");
+
+    lua_pushcfunction(lua, lastChild); 
+    lua_setfield(lua, -2, "lastChild");
 
     lua_setmetatable(lua, -2);
 }

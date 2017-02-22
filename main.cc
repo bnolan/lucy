@@ -57,10 +57,10 @@ void startServer () {
     echo.on_open=[&server](shared_ptr<WsServer::Connection> connection) {
         cout << "Server: Opened connection " << (size_t)connection.get() << endl;
 
-        auto str=make_shared<WsServer::SendStream>();
-        *str << "hi2ulolol\n";
+        // auto str=make_shared<WsServer::SendStream>();
+        // *str << "hi2ulolol\n";
 
-        server.send(connection, str);
+        // server.send(connection, str);
     };
     
     //See RFC 6455 7.4.1. for status codes
@@ -157,7 +157,8 @@ void loadScene () {
 int main () {
   loadScene();
 
-  // world->setAttribute("uuid", generateUUID());
+  world->setAttribute("uuid", generateUUID());
+  world->setAttribute("id", "world");
 
   // Node::ptr a(new Node("a-box"));
   // a->setAttribute("uuid", generateUUID());
