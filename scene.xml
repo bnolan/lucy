@@ -98,7 +98,5 @@
         box:setAttribute("rotation", string.format("0 %.2f 0", y))
       end
     ]]></script>
-    <a-box position="3 2 0"></a-box>
-    <a-box position="6 2 0"></a-box>
   </a-entity>
 </a-scene>
