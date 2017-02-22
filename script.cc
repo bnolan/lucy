@@ -10,19 +10,46 @@ extern "C" {
   #include <lualib.h>
 }
 
-lua_State *L;
-// Node *element;
-
 typedef std::weak_ptr<Node> NodeWeakPtr;
 
 #define METATABLE "NodeMetaTable"
 
-Script::Script () : Node("script") {
-}
-
 void registerNode (lua_State *lua, Node::ptr node);
 
+Script::Script () : Node("script") {
+  initialized = false;
+}
+
+void Script::initialize () {
+  // Create new state
+  L = luaL_newstate();
+  luaL_openlibs(L);
+
+  // Register this script node
+  registerNode(L, self());
+  lua_setglobal(L, "Element");
+
+  // fixme - test status: int status = 
+  luaL_loadstring(L, innerText.c_str());
+
+  /* Ask Lua to run our little script */
+  int result = lua_pcall(L, 0, LUA_MULTRET, 0);
+  if (result) {
+    fprintf(stderr, "Failed to run script: %s\n", lua_tostring(L, -1));
+  }
+
+  // Clear stack
+  lua_pop(L, 1);
+
+  // Done
+  initialized = true;
+}
+
 void Script::tick () {
+  if (!initialized) {
+    throw "Trying to tick uninitialized script";
+  }
+
   lua_getglobal(L, "tick");  /* function to be called */
   lua_pushnumber(L, 200); // milliseconds
 
@@ -31,7 +58,7 @@ void Script::tick () {
   }
 }
 
-#define getWeakPtr auto weakPtr = *static_cast<NodeWeakPtr*>(luaL_checkudata(L, 1, METATABLE))
+#define getWeakPtr auto weakPtr = *static_cast<NodeWeakPtr*>(luaL_checkudata(lua, 1, METATABLE))
 
 int setAttribute (lua_State *lua) {
     getWeakPtr;
@@ -53,20 +80,19 @@ int getAttribute (lua_State *lua) {
 
     if (auto node = weakPtr.lock()) {
       std::string key = luaL_checkstring(lua, 2);
-      lua_pushstring(L, node->getAttribute(key).c_str());
+      lua_pushstring(lua, node->getAttribute(key).c_str());
     } else {
       // todo
     }
 
     return 1;
 }
-
 
 int nodeName (lua_State *lua) {
     getWeakPtr;
 
     if (auto node = weakPtr.lock()) {
-      lua_pushstring(L, node->nodeName.c_str());
+      lua_pushstring(lua, node->nodeName.c_str());
     } else {
       // todo
     }
@@ -74,12 +100,24 @@ int nodeName (lua_State *lua) {
     return 1;
 }
 
-int childNodes (lua_State *L) {
+int parentNode (lua_State *lua) {
+    getWeakPtr;
+
+    if (auto node = weakPtr.lock()) {
+      registerNode(lua, node->parentNode->self());
+    } else {
+      // todo
+    }
+
+    return 1;
+}
+
+int childNodes (lua_State *lua) {
     getWeakPtr;
 
     if (auto node = weakPtr.lock()) {
         /* We will pass a table */
-        lua_newtable(L);    
+        lua_newtable(lua);    
 
         /*
         * To put values into the table, we first push the index, then the
@@ -101,9 +139,9 @@ int childNodes (lua_State *L) {
         for (auto const n : node->childNodes) {
             i++;
 
-            lua_pushnumber(L, i);
-            registerNode(L, n);
-            lua_rawset(L, -3);
+            lua_pushnumber(lua, i);
+            registerNode(lua, n);
+            lua_rawset(lua, -3);
         }
 
         return 1;
@@ -125,73 +163,23 @@ void registerNode (lua_State *lua, Node::ptr node) {
 
     luaL_newmetatable(lua, METATABLE);
 
-    lua_pushvalue(L, -1); 
-    lua_setfield(L, -2, "__index");
+    lua_pushvalue(lua, -1); 
+    lua_setfield(lua, -2, "__index");
     
-    lua_pushcfunction(L, setAttribute); 
-    lua_setfield(L, -2, "setAttribute");
+    lua_pushcfunction(lua, setAttribute); 
+    lua_setfield(lua, -2, "setAttribute");
 
-    lua_pushcfunction(L, getAttribute); 
-    lua_setfield(L, -2, "getAttribute");
+    lua_pushcfunction(lua, getAttribute); 
+    lua_setfield(lua, -2, "getAttribute");
 
-    lua_pushcfunction(L, childNodes); 
-    lua_setfield(L, -2, "childNodes");
+    lua_pushcfunction(lua, childNodes); 
+    lua_setfield(lua, -2, "childNodes");
 
-    lua_pushcfunction(L, nodeName); 
-    lua_setfield(L, -2, "nodeName");
+    lua_pushcfunction(lua, nodeName); 
+    lua_setfield(lua, -2, "nodeName");
+
+    lua_pushcfunction(lua, parentNode); 
+    lua_setfield(lua, -2, "parentNode");
 
     lua_setmetatable(lua, -2);
-}
-
-int startScript (Node::ptr box, std::string source) {
-    int status, result;
-
-    // element = box;
-
-    if (L) {
-        lua_close(L);   /* Cya, Lua */
-    }
-
-    /*
-     * All Lua contexts are held in this structure. We work with it almost
-     * all the time.
-     */
-    L = luaL_newstate();
-
-    luaL_openlibs(L); /* Load Lua libraries */
-
-    // Register node
-    registerNode(L, box);
-    lua_setglobal(L, "Element");
-
-    /* Load the file containing the script we are going to run */
-    if (source.empty()) {
-        status = luaL_loadfile(L, "script.lua");
-    } else {
-        status = luaL_loadstring(L, source.c_str());
-    }
-
-    if (status) {
-        /* If something went wrong, error message is at the top of */
-        /* the stack */
-        fprintf(stderr, "Couldn't load file: %s\n", lua_tostring(L, -1));
-        // exit(1);
-    }
-
-    /* Ask Lua to run our little script */
-    result = lua_pcall(L, 0, LUA_MULTRET, 0);
-    if (result) {
-        fprintf(stderr, "Failed to run script: %s\n", lua_tostring(L, -1));
-        // exit(1);
-    }
-
-    /* Get the returned value at the top of the stack (index -1) */
-
-    // printf("Script returned: %.0f\n", sum);
-
-    lua_pop(L, 1);  /* Take the returned value out of the stack */
-
-    // tickScript();
-
-    return 0;
 }

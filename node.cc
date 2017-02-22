@@ -26,7 +26,7 @@ std::list<Node::ptr> Node::querySelectorAll(std::string selector) {
 }
 
 Node::ptr Node::self() {
-  return std::make_shared<Node>(*this);
+  return shared_from_this();
 }
 
 Node::ptr Node::firstChild() {

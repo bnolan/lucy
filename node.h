@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <map>
 
-class Node {
+class Node: public std::enable_shared_from_this<Node> {
 
 public:
   typedef std::shared_ptr<Node> ptr;
@@ -46,7 +46,6 @@ public:
 
   std::string toString ();
 
-  // Fixme - get rid of this
   ptr self();
 
 };

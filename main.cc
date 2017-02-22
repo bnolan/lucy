@@ -36,7 +36,7 @@ void startServer () {
         //auto message_str = data_ss.str();
         auto message_str=message->string();
         
-        startScript(world, message_str);
+        // startScript(world, message_str);
 
         cout << "Server: Message received: \"" << message_str << "\" from " << (size_t)connection.get() << endl;
                 
@@ -92,14 +92,19 @@ void startServer () {
 
         std::list<Node::ptr> scripts = world->querySelectorAll("script");
 
-        std::cout << "Found #" << scripts.size() << " script tags\n";
+        // std::cout << "Found #" << scripts.size() << " script tags\n";
 
         for (auto node: scripts) {
           auto script = (Script *)node.get();
+
+          if (!script->initialized) {
+            script->initialize();
+          }
+
           script->tick(); 
         }
 
-        this_thread::sleep_for(chrono::milliseconds(50));
+        this_thread::sleep_for(chrono::milliseconds(200));
     }
 
     server_thread.join();
@@ -117,8 +122,6 @@ void addChildren (Node::ptr parent, pugi::xml_node node) {
         script->innerText = child.first_child().value();
 
         parent->appendChild(script);
-
-        std::cout << "Beep boop \n";
       } else {
         // Everything else...
 
@@ -141,9 +144,10 @@ void loadScene () {
 
     pugi::xml_parse_result result = doc.load_file("scene.xml");
 
-    std::cout << "Load result: " << result.description() << ".\n";
-
-    // " mesh name: " << doc.child("mesh").attribute("name").value() << std::endl;
+    if (!result) {
+      std::cout << "Load result: " << result.description() << ".\n";
+      exit(-1);
+    }
 
     pugi::xml_node sceneNode = doc.child("a-scene");
 
@@ -172,7 +176,6 @@ int main () {
 
   std::cout << "Scene state:\n\n" << world->toString() << "\n\n";
 
-  startScript(world->firstChild(), "");
   startServer();
 }
 
